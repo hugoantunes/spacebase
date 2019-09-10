@@ -4,6 +4,12 @@ help:
 	@echo "lint      - run python lint"
 	@echo "clean   	 - clean python cache files"
 
+run:
+	venv/bin/python3 spacebase/manage.py runserver 0.0.0.0:8000
+
+migrate:
+	venv/bin/python3 spacebase/manage.py migrate
+
 setup:
 	rm -rf venv/ || True
 	python3 -m venv venv
