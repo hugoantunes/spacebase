@@ -14,6 +14,7 @@ setup:
 	rm -rf venv/ || True
 	python3 -m venv venv
 	venv/bin/pip install -U pip
+	venv/bin/pip install -r requirements.txt
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} +
@@ -22,7 +23,7 @@ clean:
 	find . -name '__pycache__' -exec rm -fr {} +
 
 test:
-	venv/bin/python3 -m pytest -svvv warehouse_service/tests/
+	venv/bin/python3 spacebase/manage.py test spacebase
 
 lint:
 	venv/bin/flake8 --max-line-length=119 --exclude=venv/ .
