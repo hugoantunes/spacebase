@@ -1,13 +1,22 @@
 from django.contrib import admin
 
-from user.models import User
+from user.models import User, UserAddress
 from user.forms import UserForm
+
+
+class UserAddressInline(admin.StackedInline):
+    model = UserAddress
+    fk_name = "user"
+    extra = 0
 
 
 class UserAdmin(admin.ModelAdmin):
     form = UserForm
 
     search_fields = ['first_name', 'last_name']
+    inlines = [
+        UserAddressInline,
+    ]
 
     def hide_iban(self, obj):
         return f"---{obj.iban[-4:]}"
