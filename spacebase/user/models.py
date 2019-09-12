@@ -19,6 +19,34 @@ class UserAddress(models.Model):
     country = models.CharField(max_length=2)
     full_address = models.TextField(blank=True)
 
+    @classmethod
+    def depublicate_address(cls, old, new, attr, subset=False):
+        new_address_attr = getattr(new, attr)
+        old_address_attr = getattr(old, attr)
+        if old_address_attr and new_address_attr:
+            if old_address_attr.lower() == new_address_attr.lower():
+                pass
+            else:
+                equal = False
+                if subset:
+                    return cls.find_subset(
+                        new_address_attr, old_address_attr, new, old
+                    )
+        elif old_address_attr:
+            return new.pk, 0, False
+        elif new_address_attr:
+            return old.pk, 1, False
+        return None, None, True
+
+    @classmethod
+    def find_subset(clas, new_address_attr, old_address_attr, new, old):
+        if new_address_attr.lower() in old_address_attr.lower():
+            return new.pk, 0, False
+        elif old_address_attr.lower() in new_address_attr.lower():
+            return old.pk, 1, False
+        else:
+            return None, 1, False
+
     def save(self, *args, **kwargs):
         streetdata = f"{self.street_address}\n{self.street_address_line2}"
         self.full_address = f"{streetdata}\n{self.zipcode} {self.city} {self.state} {self.country}"
@@ -31,93 +59,21 @@ def address_save(sender, instance, **kwargs):
     equal = True
     if other_address:
         for address in other_address:
-            if address.street_address_line2 and instance.street_address_line2:
-                if address.street_address_line2.lower() == instance.street_address_line2.lower():
-                    pass
+            for attr in ['street_address_line2', 'street_address']:
+                pk, statment, equal = UserAddress.depublicate_address(
+                    instance, address, attr, subset=True
+                )
+                if pk:
+                    to_remove.add(pk)
+            if not equal:
+                if statment:
+                    continue
                 else:
-                    equal = False
-                    if instance.street_address_line2 in address.street_address_line2:
-                        to_remove.add(instance.pk)
-                        break
-                    elif address.street_address_line2 in instance.street_address_line2:
-                        to_remove.add(address.pk)
-                        continue
-                    else:
-                        continue
-            elif address.street_address_line2:
-                to_remove.add(instance.pk)
-                break
-            elif instance.street_address_line2:
-                to_remove.add(address.pk)
-                continue
-
-            if address.street_address and instance.street_address:
-                if address.street_address.lower() == instance.street_address.lower():
-                    pass
-                else:
-                    equal = False
-                    if instance.street_address in address.street_address:
-                        to_remove.add(instance.pk)
-                        break
-                    elif address.street_address in instance.street_address:
-                        to_remove.add(address.pk)
-                        continue
-                    else:
-                        continue
-            elif address.street_address:
-                to_remove.add(instance.pk)
-                break
-            elif instance.street_address:
-                to_remove.add(address.pk)
-                continue
-
-            if address.zipcode and instance.zipcode:
-                if address.zipcode.lower() == instance.zipcode.lower():
-                    pass
-                else:
-                    equal = False
-            elif address.zipcode:
-                to_remove.add(instance.pk)
-                break
-            elif instance.zipcode:
-                to_remove.add(address.pk)
-                continue
-
-            if address.city and instance.city:
-                if address.city.lower() == instance.city.lower():
-                    pass
-                else:
-                    equal = False
-            elif address.city:
-                to_remove.add(instance.pk)
-                break
-            elif instance.city:
-                to_remove.add(address.pk)
-                continue
-
-            if address.state and instance.state:
-                if address.state.lower() == instance.state.lower():
-                    pass
-                else:
-                    equal = False
-            elif address.state:
-                to_remove.add(instance.pk)
-                break
-            elif instance.state:
-                to_remove.add(address.pk)
-                continue
-
-            if address.country and instance.country:
-                if address.country.lower() == instance.country.lower():
-                    pass
-                else:
-                    equal = False
-            elif address.country:
-                to_remove.add(instance.pk)
-                break
-            elif instance.country:
-                to_remove.add(address.pk)
-                continue
+                    break
+            for attr in ['zipcode', 'city', 'state', 'country']:
+                pk, _, equal = UserAddress.depublicate_address(instance, address, attr)
+                if pk:
+                    to_remove.add(pk)
 
             if equal:
                 to_remove.add(instance.pk)
