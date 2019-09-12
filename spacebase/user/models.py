@@ -20,13 +20,11 @@ class UserAddress(models.Model):
     full_address = models.TextField(blank=True)
 
     @classmethod
-    def depublicate_address(cls, old, new, attr, subset=False):
+    def dedupublicate_address(cls, old, new, attr, subset=False):
         new_address_attr = getattr(new, attr)
         old_address_attr = getattr(old, attr)
         if old_address_attr and new_address_attr:
-            if old_address_attr.lower() == new_address_attr.lower():
-                pass
-            else:
+            if old_address_attr.lower() != new_address_attr.lower():
                 equal = False
                 if subset:
                     return cls.find_subset(
@@ -60,7 +58,7 @@ def address_save(sender, instance, **kwargs):
     if other_address:
         for address in other_address:
             for attr in ['street_address_line2', 'street_address']:
-                pk, statment, equal = UserAddress.depublicate_address(
+                pk, statment, equal = UserAddress.dedupublicate_address(
                     instance, address, attr, subset=True
                 )
                 if pk:
@@ -71,7 +69,7 @@ def address_save(sender, instance, **kwargs):
                 else:
                     break
             for attr in ['zipcode', 'city', 'state', 'country']:
-                pk, _, equal = UserAddress.depublicate_address(instance, address, attr)
+                pk, _, equal = UserAddress.dedupublicate_address(instance, address, attr)
                 if pk:
                     to_remove.add(pk)
 
