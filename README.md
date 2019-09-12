@@ -7,8 +7,7 @@ make run
 ```
 
 ## Creating super user:
-Follow the instructions on the Django docs.
-[django](https://docs.djangoproject.com/en/2.2/intro/tutorial02/#creating-an-admin-user)
+Follow the instructions on the [Django docs](https://docs.djangoproject.com/en/2.2/intro/tutorial02/#creating-an-admin-user).
 
 ## Run tests
 ```
